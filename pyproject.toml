@@ -1,0 +1,24 @@
+[project]
+name = "urdu-desk"
+version = "0.1.0"
+description = "How much of real Urdu text is typed with the wrong letters, and what that costs"
+requires-python = ">=3.11"
+dependencies = ["pyarrow>=14"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
