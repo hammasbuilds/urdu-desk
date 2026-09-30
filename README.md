@@ -5,7 +5,7 @@
 **Status:** complete as a measurement, over the whole corpus. No model, no training — the
 claim is about what real Urdu text contains and it is settled by counting characters.
 
-## The problem
+## What it does
 
 Urdu is written in the Arabic script with its own letters. A great deal of Urdu text is
 typed with the Arabic ones instead, because that is what the keyboard or the CMS produced.
@@ -105,17 +105,6 @@ For search, over the 200 commonest words:
 word in the top 200 loses a sixth of its documents. A retriever built on exact match is
 mostly fine and occasionally badly wrong, which is harder to notice than being uniformly
 wrong.
-
-## Two things that are not problems here
-
-**Zero-width characters are rare.** 1.9% of articles contain one — mostly directional marks
-(U+200F, U+200E) rather than joiners. They still split words, and `normalise` removes them.
-
-**The digits are ASCII.** Urdu has ۰۱۲۳ and Arabic has ٠١٢٣, and this corpus uses neither:
-**753,286 ASCII digits against 8 Urdu and 37 Arabic.** BBC Urdu writes numbers in ASCII.
-`script.digits` reports the mix rather than normalising it, because folding them together is
-easy and throws away what the text says about where it came from — but on this corpus there
-is nothing to fold.
 
 ## Scope
 
