@@ -26,21 +26,39 @@ is why it has to be written down rather than imported — it lives in
 ## The corpus
 
 [XL-Sum](https://huggingface.co/datasets/csebuetnlp/xlsum) Urdu — **84,581 BBC Urdu news
-articles**, all three splits, 224.7M characters, 48.2M word tokens. Nothing has been
+articles**, all three splits, 224.7M characters, about 48M word tokens. Nothing has been
 cleaned, which is the point: a tidied corpus would answer a different question.
 
 ```
-python scripts/fetch_data.py   # ~190 MB of parquet, not in git
+pip install -e .[dev]
+python demo.py                 # four sentences, no corpus needed
+python -m pytest               # 44 tests; 5 skip until the corpus is fetched
+python scripts/fetch_data.py   # ~190 MB of parquet, not in git; resumes if interrupted
 python scripts/measure.py      # every table below
-python -m pytest               # 30 tests
 ```
+
+The corpus lives in `data/`; set `URDUDESK_DATA` to keep it elsewhere.
+
+## On your own text
+
+```
+urdu-desk check scraped.txt            # Arabic look-alikes, zero-width chars, digit systems
+urdu-desk check --json a.txt b.txt     # same, as JSON; exit 1 if any look-alikes found
+urdu-desk normalise in.txt -o out.txt  # rewrite with Urdu letters (--only letters|marks)
+urdu-desk words "اس، وہ۔"              # tokenise the way the measurements do
+```
+
+`python -m urdudesk` is the same command. Files are read as UTF-8; `-` or no file is stdin.
+
+From Python: `from urdudesk import script; script.normalise(text)`.
 
 Measured over all three splits together. This is a description of what the text contains,
 not a model fitted to one half and scored on the other, so there is no split to respect.
 
 ## How much is affected
 
-**7,769 of 84,581 articles — 9.2%** contain at least one substitutable Arabic letter.
+Over all three splits (character counts, unaffected by tokenisation; validation + test
+alone give 9.7%): **7,769 of 84,581 articles — 9.2%** contain at least one substitutable Arabic letter.
 
 | Char | Codepoint | Name | Occurrences |
 |---|---|---|---:|
@@ -53,12 +71,19 @@ not a model fitted to one half and scored on the other, so there is no split to 
 
 ## What normalising does to the vocabulary
 
+The tables in this section and the next are measured on the **validation and test splits
+(16,916 articles, 8.7M word tokens)**, with the tokeniser that treats ، ۔ ؟ ؛ and digits as
+separators. An earlier version of this README gave full-corpus figures from a tokeniser that
+glued Urdu punctuation onto the preceding word (`اس،` counted as its own type); that inflated
+the vocabulary by about 16% and those numbers are withdrawn. The full-corpus rerun needs the
+156 MB train split; `scripts/measure.py` uses every split on disk and says which.
+
 | | |
 |---|---:|
-| Distinct word types, as written | 277,594 |
-| Distinct word types, normalised | 259,399 |
-| **Reduction** | **6.6%** |
-| Normalised types with more than one spelling | 13,647 (5.3%) |
+| Distinct word types, as written | 86,033 |
+| Distinct word types, normalised | 80,775 |
+| **Reduction** | **6.1%** |
+| Normalised types with more than one spelling | 4,237 (5.2%) |
 
 Two different problems are folded together here, and they are worth separating — stripping
 diacritics merges words that were typed *correctly*, while substituting letters merges words
@@ -66,18 +91,18 @@ typed with the wrong alphabet:
 
 | | Types | Reduction |
 |---|---:|---:|
-| Letter substitution alone | 277,594 → 272,616 | 1.8% |
-| Diacritics and zero-width alone | 277,594 → 264,479 | 4.7% |
-| Both | 277,594 → 259,399 | **6.6%** |
+| Letter substitution alone | 86,033 → 84,616 | 1.6% |
+| Diacritics and zero-width alone | 86,033 → 82,253 | 4.4% |
+| Both | 86,033 → 80,775 | **6.1%** |
 
 One word, many spellings:
 
 ```
-وزیراعلی    26 spellings
-اعلی        18
-ان          15
-تقریبا      15
-دلی         15
+وزیراعلی    15 spellings
+اعلی        13
+ان          12
+اس          11
+سنی         10
 ```
 
 ## What it actually costs
@@ -86,18 +111,18 @@ This is the part worth being careful about, because the headline invites oversta
 
 | | |
 |---|---:|
-| Tokens written in a **minority** spelling | 231,214 — **0.48%** of all tokens |
+| Tokens written in a **minority** spelling | 41,568 — **0.48%** of all tokens |
 
 That is the honest figure: the share of tokens an exact match on the commonest form would
-miss. Counting every token of every multi-spelling word instead gives **50.8%**, which is
-almost entirely the *dominant* spelling of two or three very common function words — a
-denominator doing all the work.
+miss. Counting every token of every multi-spelling word instead gives a figure near half,
+which is almost entirely the *dominant* spelling of two or three very common function
+words — a denominator doing all the work.
 
 For search, over the 200 commonest words:
 
 | | Documents missed |
 |---|---:|
-| Worst word | **15.1%** |
+| Worst word | **15.9%** |
 | Median word | 0.0% |
 | Mean | 0.2% |
 
@@ -118,6 +143,8 @@ same code will measure them — `script.py` takes any string.
 scripts/fetch_data.py       XL-Sum Urdu, byte-ranged, length-checked, atomic rename
 src/urdudesk/script.py      the normalisation decisions, one mapping at a time
 src/urdudesk/corpus.py      84,581 articles; available() rejects a half-downloaded split
+src/urdudesk/cli.py         urdu-desk check / normalise / words
+demo.py                     the normaliser on four sentences
 scripts/measure.py          every table above
-tests/                      30 tests, one per orthographic decision
+tests/                      44 tests; the 5 that need the corpus skip without it
 ```
