@@ -100,3 +100,35 @@ def test_every_mapping_target_is_itself_stable(ch):
     """Normalising a mapping's output must not move it again."""
     target = script.LETTERS[ch]
     assert script.normalise(target) == target
+
+
+def test_words_do_not_carry_urdu_punctuation():
+    """، ۔ ؟ ؛ sit in the Arabic block; "اس،" is the word "اس" and a comma.
+
+    Before this, the vocabulary counted every word once per punctuation mark
+    that followed it."""
+    assert script.words("اس، وہ۔ کیا؟ ہاں؛") == ["اس", "وہ", "کیا", "ہاں"]
+
+
+def test_digits_are_not_words():
+    assert script.words("۱۲۳ ١٢٣ خبر") == ["خبر"]
+
+
+def test_words_keep_diacritics_inside_the_word():
+    assert script.words("کِتاب") == ["کِتاب"]
+
+
+@pytest.mark.parametrize(
+    "fn",
+    [script.normalise, script.normalise_letters, script.words, script.variant_counts,
+     script.has_arabic_variants, script.digits],
+)
+def test_non_string_input_is_a_clear_error(fn):
+    with pytest.raises(TypeError, match="expected str, got NoneType"):
+        fn(None)
+
+
+def test_empty_text():
+    assert script.normalise("") == ""
+    assert script.words("") == []
+    assert not script.has_arabic_variants("")

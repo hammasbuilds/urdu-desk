@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from urdudesk import corpus, script  # noqa: E402
+from urdudesk.cli import _utf8_stdout  # noqa: E402
 
 
 def rule(title: str) -> None:
@@ -183,6 +184,7 @@ def the_digits(articles) -> None:
 
 
 def main() -> None:
+    _utf8_stdout()
     have = corpus.available()
     if not have:
         print("no corpus — run scripts/fetch_data.py")

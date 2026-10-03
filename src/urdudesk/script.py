@@ -43,7 +43,6 @@ LETTERS = {
     "ة": "ہ",  # TEH MARBUTA       -> HEH GOAL
     "أ": "ا",  # ALEF WITH HAMZA   -> ALEF
     "إ": "ا",  # ALEF WITH HAMZA BELOW -> ALEF
-    "آ": "آ",  # ALEF WITH MADDA is genuinely Urdu; kept as itself
 }
 
 # Zero-width characters. They carry shaping information in some scripts; in
@@ -60,8 +59,22 @@ ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩"
 _LETTER_TABLE = str.maketrans(LETTERS)
 _STRIP_TABLE = str.maketrans("", "", INVISIBLE + DIACRITICS)
 
-# Urdu word characters: the Arabic-script block plus the extended ranges.
-WORD = re.compile(r"[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]+")
+# Urdu word characters: the letters and combining marks of the Arabic-script
+# blocks. Punctuation (، ؛ ؟ ۔), both digit sets and symbols live in the same
+# blocks and are NOT word characters: "اس،" is the word "اس" and a comma.
+_BLOCKS = ((0x0600, 0x06FF), (0x0750, 0x077F), (0xFB50, 0xFDFF), (0xFE70, 0xFEFF))
+_WORD_CHARS = "".join(
+    re.escape(chr(cp))
+    for lo, hi in _BLOCKS
+    for cp in range(lo, hi + 1)
+    if unicodedata.category(chr(cp))[0] in "LM"
+)
+WORD = re.compile(f"[{_WORD_CHARS}]+")
+
+
+def _need_str(text: object) -> None:
+    if not isinstance(text, str):
+        raise TypeError(f"expected str, got {type(text).__name__}")
 
 
 def normalise(text: str) -> str:
@@ -70,6 +83,7 @@ def normalise(text: str) -> str:
     NFC first, because some sources decompose the hamza carriers, and the
     letter table below expects composed forms.
     """
+    _need_str(text)
     return unicodedata.normalize("NFC", text).translate(_LETTER_TABLE).translate(_STRIP_TABLE)
 
 
@@ -78,29 +92,35 @@ def normalise_letters(text: str) -> str:
     diacritic stripping are different problems: this one merges words that
     were typed with the wrong alphabet, the other merges words that were typed
     correctly and fully."""
+    _need_str(text)
     return unicodedata.normalize("NFC", text).translate(_LETTER_TABLE)
 
 
 def normalise_marks(text: str) -> str:
     """Only the zero-width and diacritic stripping."""
+    _need_str(text)
     return unicodedata.normalize("NFC", text).translate(_STRIP_TABLE)
 
 
 def words(text: str) -> list[str]:
+    _need_str(text)
     return WORD.findall(text)
 
 
 def has_arabic_variants(text: str) -> bool:
     """Whether the text uses any Arabic letter that Urdu spells differently."""
-    return any(ch in text for ch in LETTERS if LETTERS[ch] != ch)
+    _need_str(text)
+    return any(ch in text for ch in LETTERS)
 
 
 def variant_counts(text: str) -> dict[str, int]:
     """How many of each substitutable character the text contains."""
-    return {ch: text.count(ch) for ch in LETTERS if LETTERS[ch] != ch and ch in text}
+    _need_str(text)
+    return {ch: text.count(ch) for ch in LETTERS if ch in text}
 
 
 def invisible_counts(text: str) -> dict[str, int]:
+    _need_str(text)
     return {ch: text.count(ch) for ch in INVISIBLE if ch in text}
 
 
@@ -111,6 +131,7 @@ def digits(text: str) -> dict[str, int]:
     telling you something about where it came from, and folding them together
     throws that away.
     """
+    _need_str(text)
     return {
         "urdu": sum(text.count(d) for d in URDU_DIGITS),
         "arabic": sum(text.count(d) for d in ARABIC_DIGITS),

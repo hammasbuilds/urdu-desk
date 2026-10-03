@@ -16,12 +16,13 @@ single GET over this link truncates silently often enough to matter.
 
 from __future__ import annotations
 
+import os
 import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
 
-DATA = Path(__file__).resolve().parents[1] / "data"
+DATA = Path(os.environ.get("URDUDESK_DATA") or Path(__file__).resolve().parents[1] / "data")
 BASE = (
     "https://huggingface.co/datasets/csebuetnlp/xlsum/"
     "resolve/refs%2Fconvert%2Fparquet/urdu"
@@ -53,9 +54,15 @@ def fetch(split: str) -> None:
     # else, and the error surfaces as "parquet magic bytes not found" in a
     # measurement script rather than as "still downloading" here.
     partial = out.with_suffix(out.suffix + ".part")
-    print(f"  {out.name}  {total / 1e6:.0f} MB ", end="", flush=True)
-    written = 0
-    with partial.open("wb") as handle:
+    # An interrupted run leaves its .part behind; carry on from where it stopped
+    # instead of starting a 156 MB download from zero again.
+    written = partial.stat().st_size if partial.exists() else 0
+    if written > total:
+        partial.unlink()
+        written = 0
+    resumed = f" (resuming at {written / 1e6:.0f} MB)" if written else ""
+    print(f"  {out.name}  {total / 1e6:.0f} MB{resumed} ", end="", flush=True)
+    with partial.open("ab") as handle:
         while written < total:
             end = min(written + CHUNK, total) - 1
             request = urllib.request.Request(
@@ -68,6 +75,8 @@ def fetch(split: str) -> None:
             except (urllib.error.URLError, TimeoutError, OSError) as exc:
                 print(f"\n    failed at byte {written:,}: {exc}")
                 raise
+            if response.status != 206 and written:
+                raise OSError(f"{out.name}: server ignored the Range header")
             if not block:
                 raise OSError(f"{out.name}: empty response at byte {written:,}")
             handle.write(block)
@@ -83,7 +92,7 @@ def fetch(split: str) -> None:
 
 
 def main() -> None:
-    DATA.mkdir(exist_ok=True)
+    DATA.mkdir(parents=True, exist_ok=True)
     print("fetching XL-Sum (urdu)")
     for split in SPLITS:
         fetch(split)

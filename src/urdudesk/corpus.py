@@ -13,11 +13,14 @@ text contains, and a tidied corpus would answer a different question.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
-DATA = Path(__file__).resolve().parents[2] / "data"
+# The repository's data/ directory, unless URDUDESK_DATA points elsewhere
+# (needed for a non-editable install, and for running the tests hermetically).
+DATA = Path(os.environ.get("URDUDESK_DATA") or Path(__file__).resolve().parents[2] / "data")
 SPLITS = ("train", "validation", "test")
 
 
@@ -44,7 +47,7 @@ def load(split: str = "validation") -> tuple[Article, ...]:
     if not path.exists():
         raise CorpusMissingError(
             f"{path} is missing. Run scripts/fetch_data.py, which pulls the "
-            "Urdu half of XL-Sum."
+            "Urdu half of XL-Sum, or set URDUDESK_DATA to a directory holding it."
         )
 
     import pyarrow.parquet as pq

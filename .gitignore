@@ -1,8 +1,9 @@
 # ~190 MB of XL-Sum parquet. scripts/fetch_data.py pulls it back.
-data/*.parquet
+data/
 
 .venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .ruff_cache/
+*.egg-info/

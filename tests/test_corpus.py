@@ -12,16 +12,26 @@ import pytest
 from urdudesk import corpus, script
 
 HAVE = corpus.available()
+NEEDS_CORPUS = pytest.mark.skipif(
+    not HAVE,
+    reason="XL-Sum Urdu not on disk: run `python scripts/fetch_data.py` "
+    "(or set URDUDESK_DATA)",
+)
 SIZES = {"train": 67_665, "validation": 8_458, "test": 8_458}
 
 
-@pytest.mark.parametrize("split", [s for s in SIZES if s in HAVE])
-def test_split_sizes(split):
-    assert len(corpus.load(split)) == SIZES[split]
+@NEEDS_CORPUS
+def test_split_sizes():
+    for split in HAVE:
+        assert len(corpus.load(split)) == SIZES[split]
 
 
-def test_at_least_one_split_is_present():
-    assert HAVE, "run scripts/fetch_data.py"
+def test_missing_corpus_says_how_to_get_it(tmp_path, monkeypatch):
+    monkeypatch.setattr(corpus, "DATA", tmp_path)
+    corpus.load.cache_clear()
+    with pytest.raises(corpus.CorpusMissingError, match="fetch_data.py"):
+        corpus.load("test")
+    assert corpus.available() == []
 
 
 def test_unknown_split_is_rejected():
@@ -36,15 +46,17 @@ def test_available_skips_an_unreadable_split(tmp_path, monkeypatch):
     assert "test" not in corpus.available()
 
 
-@pytest.mark.parametrize("split", HAVE[:1])
-def test_articles_have_text(split):
+@NEEDS_CORPUS
+def test_articles_have_text():
+    split = HAVE[0]
     articles = corpus.load(split)
     assert all(a.text.strip() for a in articles)
     assert all(a.summary.strip() for a in articles)
 
 
-@pytest.mark.parametrize("split", HAVE[:1])
-def test_the_corpus_really_is_urdu(split):
+@NEEDS_CORPUS
+def test_the_corpus_really_is_urdu():
+    split = HAVE[0]
     """Guards against silently loading a different language config."""
     articles = corpus.load(split)[:200]
     urdu_chars = sum(
@@ -54,8 +66,9 @@ def test_the_corpus_really_is_urdu(split):
     assert urdu_chars / total > 0.5
 
 
-@pytest.mark.parametrize("split", HAVE[:1])
-def test_some_articles_use_arabic_letters(split):
+@NEEDS_CORPUS
+def test_some_articles_use_arabic_letters():
+    split = HAVE[0]
     """The premise of the repository. If this ever hits zero, either the
     corpus was cleaned upstream or the detector broke."""
     articles = corpus.load(split)
@@ -63,8 +76,9 @@ def test_some_articles_use_arabic_letters(split):
     assert 0 < affected / len(articles) < 0.5
 
 
-@pytest.mark.parametrize("split", HAVE[:1])
-def test_normalising_never_grows_the_vocabulary(split):
+@NEEDS_CORPUS
+def test_normalising_never_grows_the_vocabulary():
+    split = HAVE[0]
     """Merging can only ever reduce the number of distinct types."""
     articles = corpus.load(split)[:2000]
     raw = {w for a in articles for w in script.words(a.everything)}

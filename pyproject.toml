@@ -5,6 +5,12 @@ description = "How much of real Urdu text is typed with the wrong letters, and w
 requires-python = ">=3.11"
 dependencies = ["pyarrow>=14"]
 
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[project.scripts]
+urdu-desk = "urdudesk.cli:main"
+
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
