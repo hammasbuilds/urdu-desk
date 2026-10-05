@@ -148,3 +148,8 @@ demo.py                     the normaliser on four sentences
 scripts/measure.py          every table above
 tests/                      44 tests; the 5 that need the corpus skip without it
 ```
+
+## Licence
+
+Code: MIT, see [LICENSE](LICENSE). No dataset is committed; the fetch script downloads
+each source under its own terms.
