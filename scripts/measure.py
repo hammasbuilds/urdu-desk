@@ -80,8 +80,10 @@ def the_vocabulary(articles) -> None:
     print(f"distinct word types, as written      {len(raw):>9,}")
     print(f"distinct word types, normalised      {len(normalised):>9,}")
     print(f"  reduction                          {1 - len(normalised) / len(raw):>9.1%}")
-    print(f"\nnormalised types with >1 spelling    {collapsed:>9,}"
-          f"   ({collapsed / len(normalised):.1%} of the vocabulary)")
+    print(
+        f"\nnormalised types with >1 spelling    {collapsed:>9,}"
+        f"   ({collapsed / len(normalised):.1%} of the vocabulary)"
+    )
 
     # Tokens written in a spelling that is NOT the commonest one for that word.
     # Counting every token of every multi-spelling word instead gives 50.8%,
@@ -94,8 +96,10 @@ def the_vocabulary(articles) -> None:
         counts = sorted((raw[f] for f in forms), reverse=True)
         minority_tokens += sum(counts[1:])
     total_tokens = sum(raw.values())
-    print(f"\ntokens written in a minority spelling {minority_tokens:>9,}"
-          f"   ({minority_tokens / total_tokens:.2%} of all tokens)")
+    print(
+        f"\ntokens written in a minority spelling {minority_tokens:>9,}"
+        f"   ({minority_tokens / total_tokens:.2%} of all tokens)"
+    )
     print("  (i.e. would be missed by an exact match on the commonest form)")
 
     print("\n  worst offenders — one word, several spellings:")
@@ -110,12 +114,18 @@ def the_vocabulary(articles) -> None:
     letters_only = {script.normalise_letters(w) for w in raw}
     marks_only = {script.normalise_marks(w) for w in raw}
     print("\n  where the reduction comes from:")
-    print(f"    letter substitution alone   {len(raw):,} -> {len(letters_only):,}"
-          f"   ({1 - len(letters_only) / len(raw):.1%})")
-    print(f"    diacritics alone            {len(raw):,} -> {len(marks_only):,}"
-          f"   ({1 - len(marks_only) / len(raw):.1%})")
-    print(f"    both                        {len(raw):,} -> {len(normalised):,}"
-          f"   ({1 - len(normalised) / len(raw):.1%})")
+    print(
+        f"    letter substitution alone   {len(raw):,} -> {len(letters_only):,}"
+        f"   ({1 - len(letters_only) / len(raw):.1%})"
+    )
+    print(
+        f"    diacritics alone            {len(raw):,} -> {len(marks_only):,}"
+        f"   ({1 - len(marks_only) / len(raw):.1%})"
+    )
+    print(
+        f"    both                        {len(raw):,} -> {len(normalised):,}"
+        f"   ({1 - len(normalised) / len(raw):.1%})"
+    )
 
 
 def the_retrieval_cost(articles) -> None:
@@ -129,9 +139,10 @@ def the_retrieval_cost(articles) -> None:
         for word in set(script.words(script.normalise(text))):
             index_norm[word].add(n)
 
-    common = [w for w, _ in collections.Counter(
-        {w: len(d) for w, d in index_norm.items()}
-    ).most_common(200)]
+    common = [
+        w
+        for w, _ in collections.Counter({w: len(d) for w, d in index_norm.items()}).most_common(200)
+    ]
 
     missed = []
     for word in common:
@@ -162,8 +173,10 @@ def the_invisibles(articles) -> None:
             affected += 1
             per_char.update(counts)
 
-    print(f"articles containing a zero-width character: {affected:,}"
-          f"   ({affected / len(articles):.1%})")
+    print(
+        f"articles containing a zero-width character: {affected:,}"
+        f"   ({affected / len(articles):.1%})"
+    )
     for ch, count in per_char.most_common():
         print(f"  U+{ord(ch):04X}  {name(ch)[:40]:<42}{count:>10,}")
     if not per_char:

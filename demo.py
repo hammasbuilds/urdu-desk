@@ -1,6 +1,6 @@
 """What the normaliser does, on four sentences. Needs no corpus.
 
-    python demo.py
+python demo.py
 """
 
 from __future__ import annotations

@@ -23,10 +23,7 @@ import urllib.request
 from pathlib import Path
 
 DATA = Path(os.environ.get("URDUDESK_DATA") or Path(__file__).resolve().parents[1] / "data")
-BASE = (
-    "https://huggingface.co/datasets/csebuetnlp/xlsum/"
-    "resolve/refs%2Fconvert%2Fparquet/urdu"
-)
+BASE = "https://huggingface.co/datasets/csebuetnlp/xlsum/resolve/refs%2Fconvert%2Fparquet/urdu"
 SPLITS = ("validation", "test", "train")
 CHUNK = 4_000_000
 
@@ -109,8 +106,10 @@ def main() -> None:
         print(f"  {split:<11}{rows:>8,}  {'ok' if good else f'EXPECTED {want:,}'}")
 
     if not ok:
-        print("\nThe splits are not the published ones; stop rather than measure "
-              "something else.", file=sys.stderr)
+        print(
+            "\nThe splits are not the published ones; stop rather than measure something else.",
+            file=sys.stderr,
+        )
         raise SystemExit(1)
     print("\ncorpus ready")
 

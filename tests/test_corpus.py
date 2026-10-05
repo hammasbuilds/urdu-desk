@@ -14,8 +14,7 @@ from urdudesk import corpus, script
 HAVE = corpus.available()
 NEEDS_CORPUS = pytest.mark.skipif(
     not HAVE,
-    reason="XL-Sum Urdu not on disk: run `python scripts/fetch_data.py` "
-    "(or set URDUDESK_DATA)",
+    reason="XL-Sum Urdu not on disk: run `python scripts/fetch_data.py` (or set URDUDESK_DATA)",
 )
 SIZES = {"train": 67_665, "validation": 8_458, "test": 8_458}
 
@@ -59,9 +58,7 @@ def test_the_corpus_really_is_urdu():
     split = HAVE[0]
     """Guards against silently loading a different language config."""
     articles = corpus.load(split)[:200]
-    urdu_chars = sum(
-        1 for a in articles for ch in a.text[:500] if "؀" <= ch <= "ۿ"
-    )
+    urdu_chars = sum(1 for a in articles for ch in a.text[:500] if "؀" <= ch <= "ۿ")
     total = sum(len(a.text[:500]) for a in articles)
     assert urdu_chars / total > 0.5
 

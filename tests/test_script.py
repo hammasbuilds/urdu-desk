@@ -48,9 +48,7 @@ def test_unicode_nfc_does_not_do_this_for_you():
     """
     typed_arabic = f"{KAF_AR}{YEH_AR}"
     typed_urdu = f"{KEHEH_UR}{YEH_UR}"
-    assert unicodedata.normalize("NFC", typed_arabic) != unicodedata.normalize(
-        "NFC", typed_urdu
-    )
+    assert unicodedata.normalize("NFC", typed_arabic) != unicodedata.normalize("NFC", typed_urdu)
     assert script.normalise(typed_arabic) == script.normalise(typed_urdu)
 
 
@@ -120,8 +118,14 @@ def test_words_keep_diacritics_inside_the_word():
 
 @pytest.mark.parametrize(
     "fn",
-    [script.normalise, script.normalise_letters, script.words, script.variant_counts,
-     script.has_arabic_variants, script.digits],
+    [
+        script.normalise,
+        script.normalise_letters,
+        script.words,
+        script.variant_counts,
+        script.has_arabic_variants,
+        script.digits,
+    ],
 )
 def test_non_string_input_is_a_clear_error(fn):
     with pytest.raises(TypeError, match="expected str, got NoneType"):
